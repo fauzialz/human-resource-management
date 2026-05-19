@@ -1,0 +1,35 @@
+# Build stage — compiles the requested Nx NestJS app
+FROM node:20-alpine AS builder
+
+ARG APP_NAME
+WORKDIR /app
+
+# Copy dependency manifests first for layer caching
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy the full monorepo (respects .dockerignore)
+COPY . .
+
+RUN npx nx build ${APP_NAME} --configuration=production
+
+# Production stage
+FROM node:20-alpine AS production
+
+ARG APP_NAME
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+# Copy only the compiled output
+COPY --from=builder /app/dist/apps/${APP_NAME} ./dist
+
+# Install production dependencies from the compiled output's package.json
+# (Nx bundles a minimal package.json alongside the build artifact)
+RUN if [ -f dist/package.json ]; then \
+      npm install --omit=dev --prefix dist; \
+    fi
+
+EXPOSE 3000
+
+CMD ["node", "dist/main.js"]

@@ -1,0 +1,118 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-attendance_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nestjs
+      args:
+        APP_NAME: gateway
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  employee-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nestjs
+      args:
+        APP_NAME: employee-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  attendance-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nestjs
+      args:
+        APP_NAME: attendance-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  log-consumer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nestjs
+      args:
+        APP_NAME: log-consumer
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  employee-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.react
+      args:
+        APP_NAME: employee-app
+    restart: unless-stopped
+    ports:
+      - "4000:80"
+
+  admin-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.react
+      args:
+        APP_NAME: admin-app
+    restart: unless-stopped
+    ports:
+      - "4001:80"
+
+volumes:
+  postgres_data:
