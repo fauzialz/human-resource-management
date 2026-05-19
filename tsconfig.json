@@ -2,5 +2,48 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
-  "references": []
+  "references": [
+    {
+      "path": "./apps/gateway-e2e"
+    },
+    {
+      "path": "./apps/gateway"
+    },
+    {
+      "path": "./apps/employee-service-e2e"
+    },
+    {
+      "path": "./apps/employee-service"
+    },
+    {
+      "path": "./apps/attendance-service-e2e"
+    },
+    {
+      "path": "./apps/attendance-service"
+    },
+    {
+      "path": "./apps/log-consumer-e2e"
+    },
+    {
+      "path": "./apps/log-consumer"
+    },
+    {
+      "path": "./apps/employee-app-e2e"
+    },
+    {
+      "path": "./apps/employee-app"
+    },
+    {
+      "path": "./apps/admin-app-e2e"
+    },
+    {
+      "path": "./apps/admin-app"
+    },
+    {
+      "path": "./libs/shared-types"
+    },
+    {
+      "path": "./libs/ui-components"
+    }
+  ]
 }

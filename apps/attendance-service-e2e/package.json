@@ -1,0 +1,27 @@
+{
+  "name": "@human-resource-management/attendance-service-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "attendance-service-e2e",
+    "implicitDependencies": [
+      "attendance-service"
+    ],
+    "targets": {
+      "e2e": {
+        "executor": "@nx/jest:jest",
+        "outputs": [
+          "{projectRoot}/test-output/jest/coverage"
+        ],
+        "options": {
+          "jestConfig": "apps/attendance-service-e2e/jest.config.cts",
+          "passWithNoTests": true
+        },
+        "dependsOn": [
+          "attendance-service:build",
+          "attendance-service:serve"
+        ]
+      }
+    }
+  }
+}
