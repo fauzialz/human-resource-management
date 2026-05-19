@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserRole, AttendanceStatus } from './enums.ts';
+import { UserRole, AttendanceStatus } from './enums';
 
 export const LoginSchema = z.object({
   email: z.email(),

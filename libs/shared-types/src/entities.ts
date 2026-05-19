@@ -1,4 +1,4 @@
-import { UserRole } from './enums.ts';
+import { UserRole } from './enums';
 
 export interface Employee {
   id: string;
