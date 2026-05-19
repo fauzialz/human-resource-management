@@ -26,6 +26,9 @@
     },
     {
       "path": "./libs/ui-components"
+    },
+    {
+      "path": "./libs/common"
     }
   ]
 }

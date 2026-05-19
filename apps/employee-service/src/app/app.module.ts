@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -6,6 +7,10 @@ import { AppService } from './app.service';
 import { AuthModule } from '../auth/auth.module';
 import { EmployeeModule } from '../employee/employee.module';
 import { EmployeeEntity } from '../employee/employee.entity';
+import {
+  InternalOnlyGuard,
+  RolesGuard,
+} from '@human-resource-management/common';
 
 @Module({
   imports: [
@@ -28,6 +33,10 @@ import { EmployeeEntity } from '../employee/employee.entity';
     EmployeeModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: InternalOnlyGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}
