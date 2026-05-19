@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common'
 import { UserRole } from '@human-resource-management/shared-types'
-import { RequestUser } from '../interfaces/request-user.interface.js'
+import { RequestUser } from '../interfaces/request-user.interface'
 
 export const CurrentUser = createParamDecorator(
   (field: keyof RequestUser | undefined, ctx: ExecutionContext) => {
