@@ -5,6 +5,7 @@ import NxWelcome from './nx-welcome';
 export function App() {
   return (
     <div>
+      <div className="text-blue-500">Tailwind OK</div>
       <NxWelcome title="employee-app" />
     </div>
   );
