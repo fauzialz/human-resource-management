@@ -8,10 +8,11 @@ import { AppModule } from './app/app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
-  app.setGlobalPrefix('api');
+  const globalPrefix = 'api';
+  app.setGlobalPrefix(globalPrefix);
   const port = process.env['PORT'] ?? 3001;
   await app.listen(port);
-  Logger.log(`Application running on http://localhost:${port}/api`);
+  Logger.log(`Application running on http://localhost:${port}/${globalPrefix}`);
 }
 
 bootstrap();

@@ -8,9 +8,10 @@ export class RedisService implements OnModuleDestroy {
   private readonly client: Redis;
 
   constructor(config: ConfigService) {
-    this.client = new Redis(
-      config.get<string>('REDIS_URL') ?? 'redis://localhost:6379',
-    );
+    this.client = new Redis({
+      host: config.get('REDIS_HOST', 'localhost'),
+      port: config.get<number>('REDIS_PORT', 6379),
+    });
   }
 
   async publishProfileChange(event: ProfileChangeEvent): Promise<void> {
