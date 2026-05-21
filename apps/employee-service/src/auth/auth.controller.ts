@@ -5,7 +5,7 @@ import {
   LoginSchema,
   ZodValidationPipe,
 } from '@human-resource-management/shared-types';
-import type { LoginDto } from '@human-resource-management/shared-types';
+import type { LoginDtoRequest } from '@human-resource-management/shared-types';
 
 @Controller('auth')
 export class AuthController {
@@ -13,7 +13,7 @@ export class AuthController {
 
   @SkipInternalGuard()
   @Post('login')
-  login(@Body(new ZodValidationPipe(LoginSchema)) dto: LoginDto) {
+  login(@Body(new ZodValidationPipe(LoginSchema)) dto: LoginDtoRequest) {
     return this.authService.login(dto);
   }
 }

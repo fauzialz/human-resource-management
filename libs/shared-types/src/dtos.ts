@@ -5,7 +5,20 @@ export const LoginSchema = z.object({
   email: z.email(),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
 });
-export type LoginDto = z.infer<typeof LoginSchema>;
+export type LoginDtoRequest = z.infer<typeof LoginSchema>;
+
+export type LoginDtoResponse = {
+  access_token: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    position: string;
+    phone: string;
+    photoUrl?: string;
+  };
+};
 
 export const CreateEmployeeSchema = z.object({
   name: z.string().min(1),

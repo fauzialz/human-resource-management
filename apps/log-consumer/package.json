@@ -56,6 +56,27 @@
         ],
         "executor": "nx:noop"
       },
+      "migration:run": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "ts-node --project tsconfig.migrations.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d apps/log-consumer/src/data-source.ts",
+          "cwd": "{workspaceRoot}"
+        }
+      },
+      "migration:generate": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "ts-node --project tsconfig.migrations.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate apps/log-consumer/src/migrations/{args.name} -d apps/log-consumer/src/data-source.ts",
+          "cwd": "{workspaceRoot}"
+        }
+      },
+      "migration:revert": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "ts-node --project tsconfig.migrations.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d apps/log-consumer/src/data-source.ts",
+          "cwd": "{workspaceRoot}"
+        }
+      },
       "serve": {
         "continuous": true,
         "executor": "@nx/js:node",

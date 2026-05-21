@@ -7,21 +7,21 @@ import {
 } from 'typeorm';
 import { ChangeLogEntity } from './change-log.entity';
 
-@Entity('change_field')
+@Entity('change_log_fields')
 export class ChangeFieldEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryGeneratedColumn()
+  id!: number;
 
-  @Column({ type: 'varchar' })
+  @Column({ name: 'field_name', type: 'varchar' })
   fieldName!: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'old_value', type: 'text', nullable: true })
   oldValue!: string | null;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'new_value', type: 'text', nullable: true })
   newValue!: string | null;
 
-  @Column('uuid')
+  @Column({ name: 'change_log_id', type: 'uuid' })
   changeLogId!: string;
 
   @ManyToOne(() => ChangeLogEntity, (log) => log.changes, {

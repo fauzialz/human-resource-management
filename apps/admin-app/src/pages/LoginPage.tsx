@@ -28,7 +28,7 @@ export default function LoginPage() {
     });
     setLoading(false);
 
-    if (res.statusCode !== 200) {
+    if (res.statusCode !== 201) {
       setError(res.message);
       setFieldErrors({
         email: res.errors?.fieldErrors?.email?.[0] ?? '',

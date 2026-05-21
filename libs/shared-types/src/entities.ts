@@ -14,7 +14,6 @@ export interface Employee {
 export interface AttendanceRecord {
   id: string;
   employeeId: string;
-  date: Date;
   clockIn: Date;
   clockOut: Date | null;
   createdAt: Date;
