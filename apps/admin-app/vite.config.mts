@@ -1,10 +1,23 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/admin-app',
+  resolve: {
+    alias: {
+      '@human-resource-management/shared-types': resolve(
+        import.meta.dirname,
+        '../../libs/shared-types/src/index.ts',
+      ),
+      '@nestjs/common': resolve(
+        import.meta.dirname,
+        'src/stubs/nestjs-common.ts',
+      ),
+    },
+  },
   server: {
     port: 4001,
     host: 'localhost',

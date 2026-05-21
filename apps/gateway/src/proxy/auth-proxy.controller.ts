@@ -17,4 +17,15 @@ export class AuthProxyController {
       '/api/auth/login',
     );
   }
+
+  @Public()
+  @Post('login-admin')
+  async loginAdmin(@Req() req: Request, @Res() res: Response): Promise<void> {
+    await this.proxy.forward(
+      req,
+      res,
+      'EMPLOYEE_SERVICE_URL',
+      '/api/auth/login-admin',
+    );
+  }
 }

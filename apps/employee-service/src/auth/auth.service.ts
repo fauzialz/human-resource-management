@@ -4,9 +4,9 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { EmployeeEntity } from '../employee/employee.entity';
-import type {
-  LoginDtoRequest,
-  LoginDtoResponse,
+import {
+  type LoginDtoRequest,
+  type LoginDtoResponse,
 } from '@human-resource-management/shared-types';
 
 @Injectable()
@@ -22,6 +22,10 @@ export class AuthService {
       where: { email: dto.email },
     });
     if (!employee) throw new UnauthorizedException('Invalid credentials');
+
+    if (dto.roles && !dto.roles.includes(employee.role)) {
+      throw new UnauthorizedException('Insufficient permissions');
+    }
 
     const valid = await bcrypt.compare(dto.password, employee.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');

@@ -13,11 +13,15 @@ function startOfMonthDateStr(): string {
 }
 
 function startOfDay(dateStr: string): Date {
-  return new Date(`${dateStr}T00:00:00`);
+  const d = new Date(dateStr);
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 function endOfDay(dateStr: string): Date {
-  return new Date(`${dateStr}T23:59:59.999`);
+  const d = new Date(dateStr);
+  d.setHours(23, 59, 59, 999);
+  return d;
 }
 
 @Injectable()

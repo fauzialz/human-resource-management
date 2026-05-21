@@ -23,7 +23,7 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const res = await api.post<LoginResponse>('/auth/login', {
+    const res = await api.post<LoginResponse>('/auth/login-admin', {
       email,
       password,
     });
