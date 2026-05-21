@@ -1,19 +1,9 @@
 import axios from 'axios';
 import type { ApiResponse } from '../types/api';
 import { ApiError } from '../types/api';
+import { clearSession, getToken } from '../lib/session';
 
 export const BASE_URL = 'http://localhost:3000/api';
-
-let _getToken: (() => string | null) | null = null;
-let _onUnauthorized: (() => void) | null = null;
-
-export function setTokenGetter(fn: () => string | null) {
-  _getToken = fn;
-}
-
-export function setUnauthorizedHandler(fn: () => void) {
-  _onUnauthorized = fn;
-}
 
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -22,7 +12,7 @@ export const axiosInstance = axios.create({
 
 // Attach Bearer token before every request
 axiosInstance.interceptors.request.use((config) => {
-  const token = _getToken?.();
+  const token = getToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -41,7 +31,7 @@ axiosInstance.interceptors.response.use(
     let errorResponse: ApiResponse<Record<string, unknown>>;
 
     if (axios.isAxiosError(error) && error.response) {
-      if (error.response.status === 401) _onUnauthorized?.();
+      if (error.response.status === 401) clearSession();
 
       const body = error.response.data as Record<string, unknown>;
       errorResponse = {

@@ -1,26 +1,22 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import LoginPage from '../pages/LoginPage';
-import Layout from '../components/Layout';
+import { withAuthorizeAccess } from '../hooks/withAuthorizeAccess';
+import { withPublicAccess } from '../hooks/withPublicAccess';
+import _LoginPage from '../pages/LoginPage';
+import _LogoutPage from '../pages/LogoutPage';
+import _Layout from '../components/Layout';
 import EmployeesPage from '../pages/EmployeesPage';
 import AttendancePage from '../pages/AttendancePage';
 
-function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth();
-  return token ? <>{children}</> : <Navigate to="/login" replace />;
-}
+const Layout = withAuthorizeAccess(_Layout);
+const LoginPage = withPublicAccess(_LoginPage);
+const LogoutPage = withAuthorizeAccess(_LogoutPage);
 
 export function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route
-        element={
-          <RequireAuth>
-            <Layout />
-          </RequireAuth>
-        }
-      >
+      <Route path="/logout" element={<LogoutPage />} />
+      <Route element={<Layout />}>
         <Route path="/employees" element={<EmployeesPage />} />
         <Route path="/attendance" element={<AttendancePage />} />
         <Route path="/" element={<Navigate to="/employees" replace />} />

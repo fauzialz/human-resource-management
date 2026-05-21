@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { BASE_URL } from '../api/client';
+import { getToken } from '../lib/session';
 
 interface ProfileChangeEvent {
   employeeId: string;
@@ -10,13 +10,16 @@ interface ProfileChangeEvent {
 }
 
 export default function Layout() {
-  const { token, logout } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    const token = getToken();
+    if (!token) {
+      navigate('/login');
+      return;
+    }
 
     const url = `${BASE_URL}/admin/events?token=${encodeURIComponent(token)}`; // BASE_URL already includes /api
     const es = new EventSource(url);
@@ -42,11 +45,10 @@ export default function Layout() {
       es.close();
       esRef.current = null;
     };
-  }, [token, addToast]);
+  }, [addToast]);
 
   function handleLogout() {
-    logout();
-    navigate('/login');
+    navigate('/logout');
   }
 
   const navClass = ({ isActive }: { isActive: boolean }) =>

@@ -1,6 +1,6 @@
 export enum UserRole {
-  EMPLOYEE = 'EMPLOYEE',
-  ADMIN = 'ADMIN',
+  EMPLOYEE = 'employee',
+  ADMIN = 'admin',
 }
 
 export enum AttendanceStatus {
