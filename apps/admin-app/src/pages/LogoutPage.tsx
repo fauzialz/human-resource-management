@@ -9,7 +9,7 @@ const LogoutPage = () => {
 
     redirect.current = setTimeout(() => {
       window.location.href = '/login';
-    }, 1000);
+    }, 500);
 
     return () => {
       if (redirect.current) {

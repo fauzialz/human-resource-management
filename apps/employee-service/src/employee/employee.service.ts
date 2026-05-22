@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 import { EmployeeEntity } from './employee.entity';
 import { RedisService } from '../redis/redis.service';
 import type {
@@ -10,15 +12,17 @@ import type {
   UpdateEmployeeDto,
 } from '@human-resource-management/shared-types';
 
-const employeeUpdateKeys: (keyof EmployeeEntity)[] = [
-  'name',
-  'email',
-  'phone',
-  'photoUrl',
-  'position',
-  'role',
-  'passwordHash',
-];
+type FieldNames = Exclude<keyof UpdateEmployeeDto, 'removePhoto'>;
+
+const EMPLOYEE_UPDATE_KEY_COLUMN: Record<FieldNames, string> = {
+  name: 'name',
+  email: 'email',
+  phone: 'phone',
+  photoUrl: 'photo_url',
+  position: 'position',
+  role: 'role',
+  password: 'password_hash',
+};
 
 @Injectable()
 export class EmployeeService {
@@ -38,7 +42,10 @@ export class EmployeeService {
     return emp;
   }
 
-  async create(dto: CreateEmployeeDto): Promise<EmployeeEntity> {
+  async create(
+    dto: CreateEmployeeDto,
+    createdById: string,
+  ): Promise<EmployeeEntity> {
     const emp = this.repo.create({
       name: dto.name,
       email: dto.email,
@@ -47,32 +54,49 @@ export class EmployeeService {
       phone: dto.phone,
       position: dto.position,
       role: dto.role,
-      createdById: dto.createdById,
+      createdById: createdById,
     });
     return this.repo.save(emp);
   }
 
-  async update(id: string, dto: UpdateEmployeeDto): Promise<EmployeeEntity> {
+  async update(
+    id: string,
+    dto: UpdateEmployeeDto,
+    updatedById: string,
+  ): Promise<EmployeeEntity> {
     const emp = await this.findOne(id);
     const oldData = { ...emp };
-    const { password: _pass, ...rest } = dto;
+    const { password: _pass, removePhoto, ...rest } = dto;
 
     if (dto.password) {
       emp.passwordHash = await bcrypt.hash(dto.password, 10);
     }
     Object.assign(emp, rest);
+
+    if (removePhoto === 'true') {
+      if (oldData.photoUrl) {
+        await unlink(join(process.cwd(), oldData.photoUrl)).catch(() => {});
+      }
+      emp.photoUrl = null;
+    }
     const saved = await this.repo.save(emp);
 
     // Prepare change events for fields that were updated
     const changes: ChangeFieldEvent[] = [];
-    for (const key of employeeUpdateKeys) {
+    for (const key in EMPLOYEE_UPDATE_KEY_COLUMN) {
       if (!(key in dto)) continue; // Skip if field not in update DTO
       const oldValue = String((oldData as any)?.[key] ?? '');
-      const newValue = String((emp as any)?.[key] ?? '');
-      if (key === 'passwordHash') {
-        if (await bcrypt.compare(oldValue, newValue)) {
+      const newValue = String((saved as any)?.[key] ?? '');
+      const fieldName = EMPLOYEE_UPDATE_KEY_COLUMN[key as FieldNames];
+
+      if (key === 'photoUrl' && removePhoto !== 'true' && !dto.photoUrl) {
+        continue; // Skip photoUrl change if not actually updated
+      }
+
+      if (key === 'password' && dto.password) {
+        if (!(await bcrypt.compare(dto.password, oldValue))) {
           changes.push({
-            fieldName: 'password',
+            fieldName,
             oldValue: '',
             newValue: '',
           });
@@ -82,19 +106,22 @@ export class EmployeeService {
 
       if (oldValue !== newValue) {
         changes.push({
-          fieldName: key,
+          fieldName,
           oldValue,
           newValue,
         });
       }
     }
 
-    await this.redis.publishProfileChange({
-      employeeId: id,
-      changes,
-      changedAt: new Date(),
-      changedById: dto.updatedById,
-    });
+    if (changes.length > 0) {
+      await this.redis.publishProfileChange({
+        employeeId: id,
+        employeeName: emp.name,
+        changes,
+        changedAt: new Date(),
+        changedById: updatedById,
+      });
+    }
 
     return saved;
   }
@@ -109,6 +136,7 @@ export class EmployeeService {
     await this.repo.save(emp);
     await this.redis.publishProfileChange({
       employeeId: id,
+      employeeName: emp.name,
       changes: [
         {
           fieldName: 'password',

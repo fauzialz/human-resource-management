@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, unwrap } from '../api/client';
+import { api, unwrap, EMPLOYEE_SERVICE_URL } from '../api/client';
 import { ApiError } from '../types/api';
 import { getUser } from '../lib/session';
 import { Employee, UserRole } from '@human-resource-management/shared-types';
+import {
+  PasswordInput,
+  PhotoInput,
+} from '@human-resource-management/ui-components';
 
 interface EmployeeFormData {
   name: string;
@@ -23,13 +27,24 @@ const defaultForm: EmployeeFormData = {
   role: UserRole.EMPLOYEE,
 };
 
+const extractFieldErrors = (err: ApiError): Record<string, string> => {
+  const result: Record<string, string> = {};
+  for (const [field, msgs] of Object.entries(err.errors?.fieldErrors ?? {})) {
+    result[field] = msgs[0] ?? '';
+  }
+  return result;
+};
+
 export default function EmployeesPage() {
-  const user = getUser();
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Employee | null>(null);
   const [form, setForm] = useState<EmployeeFormData>(defaultForm);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoRemoved, setPhotoRemoved] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [formError, setFormError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees'],
@@ -37,36 +52,38 @@ export default function EmployeesPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: EmployeeFormData) =>
-      api
-        .post('/employees', { ...data, createdById: user?.id ?? '' })
-        .then(unwrap),
+    mutationFn: (data: FormData) => api.post('/employees', data).then(unwrap),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       closeModal();
     },
-    onError: (err: ApiError) => setFormError(err.message),
+    onError: (err: ApiError) => {
+      setFormError(err.message);
+      setFieldErrors(extractFieldErrors(err));
+    },
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: Partial<EmployeeFormData>) =>
-      api
-        .patch(`/employees/${editTarget!.id}`, {
-          ...data,
-          updatedById: user?.id ?? '',
-        })
-        .then(unwrap),
+    mutationFn: (data: FormData) =>
+      api.patch(`/employees/${editTarget!.id}`, data).then(unwrap),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       closeModal();
     },
-    onError: (err: ApiError) => setFormError(err.message),
+    onError: (err: ApiError) => {
+      setFormError(err.message);
+      setFieldErrors(extractFieldErrors(err));
+    },
   });
 
   function openCreate() {
     setEditTarget(null);
     setForm(defaultForm);
+    setPhoto(null);
+    setPhotoRemoved(false);
+    setConfirmPassword('');
     setFormError('');
+    setFieldErrors({});
     setModalOpen(true);
   }
 
@@ -80,7 +97,11 @@ export default function EmployeesPage() {
       position: emp.position,
       role: emp.role,
     });
+    setPhoto(null);
+    setPhotoRemoved(false);
+    setConfirmPassword('');
     setFormError('');
+    setFieldErrors({});
     setModalOpen(true);
   }
 
@@ -88,32 +109,79 @@ export default function EmployeesPage() {
     setModalOpen(false);
     setEditTarget(null);
     setForm(defaultForm);
+    setPhoto(null);
+    setPhotoRemoved(false);
+    setConfirmPassword('');
     setFormError('');
+    setFieldErrors({});
   }
 
   function handleField(field: keyof EmployeeFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  function handlePasswordChange(value: string) {
+    handleField('password', value);
+    if (confirmPassword) {
+      const mismatch = value !== confirmPassword;
+      setFieldErrors((prev) => ({
+        ...prev,
+        confirmPassword: mismatch ? 'Passwords do not match' : '',
+      }));
+    }
+  }
+
+  function handleConfirmPasswordChange(value: string) {
+    setConfirmPassword(value);
+    const error =
+      value && value !== form.password ? 'Passwords do not match' : '';
+    setFieldErrors((prev) => ({ ...prev, confirmPassword: error }));
+  }
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError('');
+    setFieldErrors({});
+
+    if (form.password) {
+      if (!confirmPassword) {
+        setFieldErrors({ confirmPassword: 'Please confirm your password' });
+        return;
+      }
+      if (form.password !== confirmPassword) {
+        setFieldErrors({ confirmPassword: 'Passwords do not match' });
+        return;
+      }
+    }
+
+    const fd = new FormData();
     if (editTarget) {
-      const patch: Partial<EmployeeFormData> = {
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        position: form.position,
-        role: form.role,
-      };
-      if (form.password) patch.password = form.password;
-      updateMutation.mutate(patch);
+      fd.append('name', form.name);
+      fd.append('email', form.email);
+      if (form.phone) fd.append('phone', form.phone);
+      fd.append('position', form.position);
+      fd.append('role', form.role);
+      if (form.password) fd.append('password', form.password);
+      if (photo) fd.append('photo', photo);
+      if (photoRemoved && !photo) fd.append('removePhoto', 'true');
+      updateMutation.mutate(fd);
     } else {
-      createMutation.mutate(form);
+      fd.append('name', form.name);
+      fd.append('email', form.email);
+      fd.append('password', form.password);
+      if (form.phone) fd.append('phone', form.phone);
+      fd.append('position', form.position);
+      fd.append('role', form.role);
+      if (photo) fd.append('photo', photo);
+      createMutation.mutate(fd);
     }
   }
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
+
+  const existingPhotoUrl = editTarget?.photoUrl
+    ? `${EMPLOYEE_SERVICE_URL}/${editTarget.photoUrl}`
+    : undefined;
 
   return (
     <div className="p-6">
@@ -209,56 +277,81 @@ export default function EmployeesPage() {
               </p>
             )}
             <form onSubmit={handleSubmit} className="space-y-3">
-              <Field label="Name">
+              <div className="flex justify-center mb-1">
+                <PhotoInput
+                  value={photo}
+                  onChange={setPhoto}
+                  currentUrl={photoRemoved ? undefined : existingPhotoUrl}
+                  onRemove={() => setPhotoRemoved(true)}
+                />
+              </div>
+              <Field label="Name" error={fieldErrors['name']}>
                 <input
                   required
                   value={form.name}
                   onChange={(e) => handleField('name', e.target.value)}
-                  className={inputCls}
+                  className={inputCls(!!fieldErrors['name'])}
                 />
               </Field>
-              <Field label="Email">
+              <Field label="Email" error={fieldErrors['email']}>
                 <input
                   type="email"
                   required
                   value={form.email}
                   onChange={(e) => handleField('email', e.target.value)}
-                  className={inputCls}
+                  className={inputCls(!!fieldErrors['email'])}
                 />
               </Field>
               <Field
                 label={
                   editTarget ? 'Password (leave blank to keep)' : 'Password'
                 }
+                error={fieldErrors['password']}
               >
-                <input
-                  type="password"
+                <PasswordInput
                   required={!editTarget}
                   value={form.password}
-                  onChange={(e) => handleField('password', e.target.value)}
-                  className={inputCls}
+                  onChange={handlePasswordChange}
+                  hasError={!!fieldErrors['password']}
+                  className={`${inputCls(!!fieldErrors['password'])} pr-9`}
                 />
               </Field>
-              <Field label="Phone">
+              <Field
+                label={
+                  editTarget
+                    ? 'Confirm Password (leave blank to keep)'
+                    : 'Confirm Password'
+                }
+                error={fieldErrors['confirmPassword']}
+              >
+                <PasswordInput
+                  required={!editTarget}
+                  value={confirmPassword}
+                  onChange={handleConfirmPasswordChange}
+                  hasError={!!fieldErrors['confirmPassword']}
+                  className={`${inputCls(!!fieldErrors['confirmPassword'])} pr-9`}
+                />
+              </Field>
+              <Field label="Phone" error={fieldErrors['phone']}>
                 <input
                   value={form.phone}
                   onChange={(e) => handleField('phone', e.target.value)}
-                  className={inputCls}
+                  className={inputCls(!!fieldErrors['phone'])}
                 />
               </Field>
-              <Field label="Position">
+              <Field label="Position" error={fieldErrors['position']}>
                 <input
                   required
                   value={form.position}
                   onChange={(e) => handleField('position', e.target.value)}
-                  className={inputCls}
+                  className={inputCls(!!fieldErrors['position'])}
                 />
               </Field>
-              <Field label="Role">
+              <Field label="Role" error={fieldErrors['role']}>
                 <select
                   value={form.role}
                   onChange={(e) => handleField('role', e.target.value)}
-                  className={inputCls}
+                  className={inputCls(!!fieldErrors['role'])}
                 >
                   <option value={UserRole.EMPLOYEE}>Employee</option>
                   <option value={UserRole.ADMIN}>Admin</option>
@@ -274,7 +367,7 @@ export default function EmployeesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSaving}
+                  disabled={isSaving || !!fieldErrors['confirmPassword']}
                   className="px-4 py-2 text-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded"
                 >
                   {isSaving ? 'Saving…' : editTarget ? 'Save' : 'Create'}
@@ -288,15 +381,17 @@ export default function EmployeesPage() {
   );
 }
 
-const inputCls =
-  'w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500';
+const inputCls = (hasError = false) =>
+  `w-full border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500`;
 
 function Field({
   label,
   children,
+  error,
 }: {
   label: string;
   children: React.ReactNode;
+  error?: string;
 }) {
   return (
     <div>
@@ -304,6 +399,7 @@ function Field({
         {label}
       </label>
       {children}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }

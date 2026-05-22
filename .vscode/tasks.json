@@ -1,0 +1,64 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "serve: gateway",
+      "type": "shell",
+      "command": "npx nx serve gateway",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "group": "backend",
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "serve: employee-service",
+      "type": "shell",
+      "command": "npx nx serve employee-service",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "group": "backend",
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "serve: attendance-service",
+      "type": "shell",
+      "command": "npx nx serve attendance-service",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "group": "backend",
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "serve: log-consumer",
+      "type": "shell",
+      "command": "npx nx serve log-consumer",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "group": "backend",
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "Start All Backend",
+      "dependsOn": [
+        "serve: gateway",
+        "serve: employee-service",
+        "serve: attendance-service",
+        "serve: log-consumer"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

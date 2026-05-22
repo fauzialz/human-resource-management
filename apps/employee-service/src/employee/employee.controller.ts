@@ -53,11 +53,7 @@ export class EmployeeController {
     @CurrentUser() user: RequestUser,
   ) {
     const photoUrl = file ? `uploads/${file.filename}` : dto.photoUrl;
-    return this.employeeService.create({
-      ...dto,
-      photoUrl,
-      createdById: user.id,
-    });
+    return this.employeeService.create({ ...dto, photoUrl }, user.id);
   }
 
   @Get(':id')
@@ -88,14 +84,11 @@ export class EmployeeController {
             phone: dto.phone,
             password: dto.password,
             photoUrl,
-            updatedById: user.id,
+            removePhoto: dto.removePhoto,
           }
-        : { ...dto, photoUrl, updatedById: user.id };
+        : { ...dto, photoUrl };
 
-    return this.employeeService.update(id, {
-      ...payload,
-      updatedById: user.id,
-    });
+    return this.employeeService.update(id, payload, user.id);
   }
 
   @Patch(':id/password')

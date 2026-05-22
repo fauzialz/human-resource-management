@@ -12,6 +12,10 @@ export default defineConfig(() => ({
         import.meta.dirname,
         '../../libs/shared-types/src/index.ts',
       ),
+      '@human-resource-management/ui-components': resolve(
+        import.meta.dirname,
+        '../../libs/ui-components/src/index.ts',
+      ),
       '@nestjs/common': resolve(
         import.meta.dirname,
         'src/stubs/nestjs-common.ts',

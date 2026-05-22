@@ -30,15 +30,12 @@ export const CreateEmployeeSchema = z.object({
   phone: z.string().min(10, 'Phone number must be at least 10 characters long'),
   position: z.string().min(1),
   role: z.enum(UserRole),
-  createdById: z.string(),
 });
 export type CreateEmployeeDto = z.infer<typeof CreateEmployeeSchema>;
 
-export const UpdateEmployeeSchema = CreateEmployeeSchema.partial().and(
-  z.object({
-    updatedById: z.string(),
-  }),
-);
+export const UpdateEmployeeSchema = CreateEmployeeSchema.partial().extend({
+  removePhoto: z.enum(['true']).optional(),
+});
 export type UpdateEmployeeDto = z.infer<typeof UpdateEmployeeSchema>;
 
 export const ClockSchema = z.object({

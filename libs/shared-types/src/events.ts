@@ -6,6 +6,7 @@ export interface ChangeFieldEvent {
 
 export interface ProfileChangeEvent {
   employeeId: string;
+  employeeName: string;
   changes: ChangeFieldEvent[];
   changedAt: Date;
   changedById: string;

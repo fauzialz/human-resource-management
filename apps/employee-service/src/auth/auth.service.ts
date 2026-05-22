@@ -44,7 +44,7 @@ export class AuthService {
         role: employee.role,
         position: employee.position,
         phone: employee.phone,
-        photoUrl: employee.photoUrl,
+        photoUrl: employee.photoUrl ?? undefined,
       },
     };
   }

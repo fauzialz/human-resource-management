@@ -28,8 +28,8 @@ export class EmployeeEntity {
   @Column({ nullable: true })
   phone!: string;
 
-  @Column({ name: 'photo_url', nullable: true })
-  photoUrl!: string;
+  @Column({ name: 'photo_url', nullable: true, type: 'varchar' })
+  photoUrl!: string | null;
 
   @Column()
   position!: string;

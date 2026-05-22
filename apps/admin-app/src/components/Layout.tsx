@@ -3,11 +3,17 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { BASE_URL } from '../api/client';
 import { getToken } from '../lib/session';
+import { ProfileChangeEvent } from '@human-resource-management/shared-types';
 
-interface ProfileChangeEvent {
-  employeeId: string;
-  changes: { fieldName: string }[];
-}
+const MAP_FIELD_NAME: { [key: string]: string } = {
+  name: 'Name',
+  email: 'Email',
+  phone: 'Phone',
+  position: 'Position',
+  role: 'Role',
+  password_hash: 'Password',
+  photo_url: 'Photo',
+};
 
 export default function Layout() {
   const { addToast } = useToast();
@@ -28,9 +34,11 @@ export default function Layout() {
     es.onmessage = (e) => {
       try {
         const event = JSON.parse(e.data) as ProfileChangeEvent;
-        const fields = event.changes.map((c) => c.fieldName).join(', ');
+        const fields = event.changes
+          .map((c) => MAP_FIELD_NAME[c.fieldName] || c.fieldName)
+          .join(', ');
         addToast(
-          `Employee ${event.employeeId} changed: ${fields || 'profile'}`,
+          `Employee ${event.employeeName} changed: ${fields || 'profile'}`,
         );
       } catch {
         // ignore malformed

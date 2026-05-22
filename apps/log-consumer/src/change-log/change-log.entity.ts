@@ -6,13 +6,13 @@ export class ChangeLogEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column('uuid')
+  @Column({ name: 'employee_id', type: 'uuid' })
   employeeId!: string;
 
-  @Column('uuid')
+  @Column({ name: 'changed_by_id', type: 'uuid' })
   changedById!: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ name: 'changed_at', type: 'timestamp' })
   changedAt!: Date;
 
   @OneToMany(() => ChangeFieldEntity, (field) => field.changeLog, {

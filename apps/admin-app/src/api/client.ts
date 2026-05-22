@@ -4,6 +4,7 @@ import { ApiError } from '../types/api';
 import { clearSession, getToken } from '../lib/session';
 
 export const BASE_URL = 'http://localhost:3000/api';
+export const EMPLOYEE_SERVICE_URL = 'http://localhost:3001';
 
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -14,6 +15,9 @@ export const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use((config) => {
   const token = getToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
   return config;
 });
 
