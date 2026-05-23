@@ -34,13 +34,25 @@ Edit `.env` and fill in at minimum:
 - `POSTGRES_PASSWORD` — any password
 - `JWT_SECRET` — any long random string
 
+> `POSTGRES_HOST`, `REDIS_HOST`, `EMPLOYEE_SERVICE_URL`, and `ATTENDANCE_SERVICE_URL`
+> are automatically overridden to Docker service names by `docker-compose.yml` —
+> leave them as `localhost` values in `.env`.
+
 ### 2. Start everything
 
 ```bash
 docker compose up --build
 ```
 
-On first run, `docker/init-db.sh` creates the required databases automatically using the names defined by `POSTGRES_EMPLOYEE_DB`, `POSTGRES_ATTENDANCE_DB`, and `POSTGRES_AUDIT_DB` in your `.env`.
+On first run:
+- `docker/init-db.sh` creates the required databases automatically.
+- Each service runs its TypeORM migrations on startup — no manual step needed.
+
+On subsequent runs, `--build` can be omitted if no code has changed:
+
+```bash
+docker compose up
+```
 
 | URL                       | Description  |
 | ------------------------- | ------------ |
@@ -82,12 +94,16 @@ All services and both React apps read from the single root `.env`. Copy the exam
 cp .env.example .env
 ```
 
-Fill in at minimum `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `JWT_SECRET`. When running locally, keep the service URLs pointing to `localhost`:
+Fill in at minimum `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `JWT_SECRET`. For local development keep the host values as `localhost`:
 
 ```
+POSTGRES_HOST=localhost
+REDIS_HOST=localhost
 EMPLOYEE_SERVICE_URL=http://localhost:3001
 ATTENDANCE_SERVICE_URL=http://localhost:3002
 ```
+
+> When running via `docker compose`, `POSTGRES_HOST` and `REDIS_HOST` are automatically overridden to the Docker service names — you only need the `localhost` values here for local dev.
 
 > The per-service `.env.example` files in each app folder document which variables each service needs — useful as a reference for individual service deployments (e.g. AWS Parameter Store), but not required for local development.
 
@@ -137,6 +153,55 @@ npx nx serve admin-app      # http://localhost:4001
 
 ---
 
+## Database Migrations
+
+### Creating a new migration
+
+Run the generate command for the relevant service. TypeORM compares the current
+entity definitions against the database and writes a timestamped migration file
+(e.g. `1716900000000-AddPhoneColumn.ts`) into `apps/<service>/src/migrations/`:
+
+```bash
+npx nx run employee-service:migration:generate --args="--name=<MigrationName>"
+npx nx run attendance-service:migration:generate --args="--name=<MigrationName>"
+npx nx run log-consumer:migration:generate --args="--name=<MigrationName>"
+```
+
+After generating, add the new class to `apps/<service>/src/migrations/index.ts`
+(keep them in chronological order — oldest first):
+
+```ts
+import { InitialSchema1700000000000 } from './1700000000000-InitialSchema';
+import { AddPhoneColumn1716900000000 } from './1716900000000-AddPhoneColumn';
+
+export const migrations = [InitialSchema1700000000000, AddPhoneColumn1716900000000];
+```
+
+> The class name is printed at the top of the generated file.
+> `app.module.ts` imports the whole array automatically — no changes needed there.
+
+### Running migrations manually (local development)
+
+```bash
+npx nx run employee-service:migration:run
+npx nx run attendance-service:migration:run
+npx nx run log-consumer:migration:run
+```
+
+> **Docker:** migrations run automatically on container startup — no manual step
+> needed. Re-running `docker compose up` will not re-apply already-applied
+> migrations because TypeORM tracks them in the `migrations` table.
+
+### Reverting the last migration
+
+```bash
+npx nx run employee-service:migration:revert
+npx nx run attendance-service:migration:revert
+npx nx run log-consumer:migration:revert
+```
+
+---
+
 ## Common Commands
 
 ```bash
@@ -145,19 +210,4 @@ npx nx serve <app-name>
 
 # Build for production
 npx nx build <app-name>
-
-# Run migrations
-npx nx run employee-service:migration:run
-npx nx run attendance-service:migration:run
-npx nx run log-consumer:migration:run
-
-# Generate a new migration
-npx nx run employee-service:migration:generate --args="--name=<MigrationName>"
-npx nx run attendance-service:migration:generate --args="--name=<MigrationName>"
-npx nx run log-consumer:migration:generate --args="--name=<MigrationName>"
-
-# Revert the last migration
-npx nx run employee-service:migration:revert
-npx nx run attendance-service:migration:revert
-npx nx run log-consumer:migration:revert
 ```

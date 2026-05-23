@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChangeLogEntity } from '../change-log/change-log.entity';
 import { ChangeFieldEntity } from '../change-log/change-field.entity';
+import { migrations } from '../migrations';
 import { RedisSubscriberService } from '../redis-subscriber/redis-subscriber.service';
 
 @Module({
@@ -19,8 +20,8 @@ import { RedisSubscriberService } from '../redis-subscriber/redis-subscriber.ser
         database: config.getOrThrow<string>('POSTGRES_AUDIT_DB'),
         entities: [ChangeLogEntity, ChangeFieldEntity],
         synchronize: false,
-        migrationsRun: false,
-        migrations: [__dirname + '/migrations/*.ts'],
+        migrationsRun: true,
+        migrations,
       }),
       inject: [ConfigService],
     }),

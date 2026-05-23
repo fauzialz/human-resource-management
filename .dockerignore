@@ -1,0 +1,7 @@
+.git
+.nx/cache
+node_modules
+apps/*/node_modules
+libs/*/node_modules
+apps/*/dist
+libs/*/dist

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage — compiles the requested Nx React/Vite app
 FROM node:20-alpine AS builder
 
@@ -6,21 +7,25 @@ ARG APP_NAME
 ARG VITE_BASE_API_URL
 WORKDIR /app
 
-# Copy dependency manifests first for layer caching
-COPY package.json package-lock.json ./
-RUN npm ci
+# Copy only package.json files (preserving directory structure) so the
+# npm ci layer is only invalidated when dependencies change, not source.
+COPY --parents package.json package-lock.json apps/*/package.json libs/*/package.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
-# Copy the full monorepo (respects .dockerignore)
+# Copy the full monorepo source (node_modules, dist, .git excluded via .dockerignore)
 COPY . .
 
-RUN npx nx build ${APP_NAME} --configuration=production
+# Nx cache is persisted across builds on the same machine via the cache mount.
+RUN --mount=type=cache,target=/app/.nx/cache \
+    npx nx build ${APP_NAME} --configuration=production
 
 # Production stage — serve static assets with nginx
 FROM nginx:alpine AS production
 
 ARG APP_NAME
 
-COPY --from=builder /app/dist/apps/${APP_NAME} /usr/share/nginx/html
+COPY --from=builder /app/apps/${APP_NAME}/dist /usr/share/nginx/html
 
 # Support client-side routing (SPA fallback)
 RUN printf 'server {\n\

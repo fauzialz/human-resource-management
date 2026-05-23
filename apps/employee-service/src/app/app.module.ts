@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from '../auth/auth.module';
 import { EmployeeModule } from '../employee/employee.module';
 import { EmployeeEntity } from '../employee/employee.entity';
+import { migrations } from '../migrations';
 import {
   InternalOnlyGuard,
   RolesGuard,
@@ -26,8 +27,8 @@ import {
         database: config.get('POSTGRES_EMPLOYEE_DB', 'employee_db'),
         entities: [EmployeeEntity],
         synchronize: false,
-        migrationsRun: false,
-        migrations: [__dirname + '/migrations/*.ts'],
+        migrationsRun: true,
+        migrations,
       }),
       inject: [ConfigService],
     }),

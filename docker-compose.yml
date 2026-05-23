@@ -1,3 +1,12 @@
+# Override block applied to every backend service that connects to Postgres/Redis.
+# .env uses localhost values for local development; docker-compose overrides them
+# here so containers reach each other by service name instead.
+x-backend-env: &backend-env
+  POSTGRES_HOST: postgres
+  REDIS_HOST: redis
+  EMPLOYEE_SERVICE_URL: http://employee-service:3001
+  ATTENDANCE_SERVICE_URL: http://attendance-service:3002
+
 services:
   postgres:
     image: postgres:16
@@ -41,6 +50,8 @@ services:
       - '3000:3000'
     env_file:
       - .env
+    environment:
+      <<: *backend-env
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,6 +69,10 @@ services:
       - '3001:3001'
     env_file:
       - .env
+    environment:
+      <<: *backend-env
+    volumes:
+      - employee_uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -75,6 +90,8 @@ services:
       - '3002:3002'
     env_file:
       - .env
+    environment:
+      <<: *backend-env
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,6 +107,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      <<: *backend-env
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,3 +139,4 @@ services:
 
 volumes:
   postgres_data:
+  employee_uploads:

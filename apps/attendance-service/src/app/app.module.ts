@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AttendanceModule } from '../attendance/attendance.module';
 import { AttendanceRecord } from '../attendance/attendance-record.entity';
+import { migrations } from '../migrations';
 import {
   InternalOnlyGuard,
   RolesGuard,
@@ -25,8 +26,8 @@ import {
         database: config.get('POSTGRES_ATTENDANCE_DB', 'attendance_db'),
         entities: [AttendanceRecord],
         synchronize: false,
-        migrationsRun: false,
-        migrations: [__dirname + '/migrations/*.ts'],
+        migrationsRun: true,
+        migrations,
       }),
       inject: [ConfigService],
     }),
