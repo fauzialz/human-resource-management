@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { UserRole, AttendanceStatus } from './enums';
+import { AttendanceRecord } from './entities';
 
 export const LoginSchema = z.object({
   email: z.email(),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
+  roles: z.array(z.enum(UserRole)).optional(),
 });
-export type LoginDtoRequest = z.infer<typeof LoginSchema> & {
-  roles?: UserRole[];
-};
+export type LoginDtoRequest = z.infer<typeof LoginSchema>;
 
 export type LoginDtoResponse = {
   access_token: string;
@@ -50,3 +50,12 @@ export const AttendanceSummaryQuerySchema = z.object({
 export type AttendanceSummaryQuery = z.infer<
   typeof AttendanceSummaryQuerySchema
 >;
+export interface AttendanceAllResponse
+  extends Omit<AttendanceRecord, 'employeeId'> {
+  employee: {
+    id: string;
+    name: string;
+    role: UserRole;
+    position: string;
+  };
+}
