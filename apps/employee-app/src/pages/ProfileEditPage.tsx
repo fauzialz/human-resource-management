@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, axiosInstance, unwrap, getPhotoUrl } from '../api/client';
 import { getUser, updateUser } from '../lib/session';
-import { useToast } from '@human-resource-management/ui-components';
-import { PhotoInput } from '@human-resource-management/ui-components';
+import {
+  useToast,
+  PhotoInput,
+  Input,
+} from '@human-resource-management/ui-components';
 import type { Employee } from '@human-resource-management/shared-types';
-import type { ApiResponse } from '../types/api';
+import type { ApiResponse } from '@human-resource-management/shared-types';
 
 export default function ProfileEditPage() {
   const navigate = useNavigate();
@@ -17,6 +20,9 @@ export default function ProfileEditPage() {
   const [phone, setPhone] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [removePhoto, setRemovePhoto] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ [field: string]: string }>(
+    {},
+  );
 
   const {
     data: employee,
@@ -51,6 +57,9 @@ export default function ProfileEditPage() {
     onSuccess: (res) => {
       if (res.error) {
         addToast(res.message, 'error');
+        setFieldErrors({
+          phone: res.errors?.fieldErrors?.phone?.[0] ?? '',
+        });
         return;
       }
       updateUser({ phone: res.data.phone, photoUrl: res.data.photoUrl });
@@ -136,13 +145,13 @@ export default function ProfileEditPage() {
           >
             Phone
           </label>
-          <input
+          <Input
             id="phone"
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="e.g. +628123456789"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            error={fieldErrors.phone}
           />
         </div>
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { setSession } from '../lib/session';
-import { PasswordInput } from '@human-resource-management/ui-components';
+import { Input, InputPassword } from '@human-resource-management/ui-components';
 import type { LoginDtoResponse } from '@human-resource-management/shared-types';
 
 export default function LoginPage() {
@@ -20,7 +20,10 @@ export default function LoginPage() {
     setError('');
     setFieldErrors({});
 
-    const res = await api.post<LoginDtoResponse>('/auth/login', { email, password });
+    const res = await api.post<LoginDtoResponse>('/auth/login', {
+      email,
+      password,
+    });
     setLoading(false);
 
     if (res.statusCode !== 201) {
@@ -55,46 +58,44 @@ export default function LoginPage() {
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
+            <label
+              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="email"
+            >
               Email
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                fieldErrors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
+              error={fieldErrors.email}
             />
-            {fieldErrors.email && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>
-            )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">
+          <div className="mt-4">
+            <label
+              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="password"
+            >
               Password
             </label>
-            <PasswordInput
+            <InputPassword
               id="password"
               required
               value={password}
               onChange={setPassword}
-              hasError={!!fieldErrors.password}
+              error={fieldErrors.password}
             />
-            {fieldErrors.password && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
-            )}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+            className="w-full mt-8 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
           >
             {loading ? 'Signing in…' : 'Sign In'}
           </button>

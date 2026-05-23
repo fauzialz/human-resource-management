@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api, unwrap } from '../api/client';
 import type { AttendanceRecord } from '@human-resource-management/shared-types';
 import { getUser } from '../lib/session';
+import { Input } from '@human-resource-management/ui-components';
 
 function startOfMonth(): string {
   const d = new Date();
@@ -69,20 +70,18 @@ export default function SummaryPage() {
       <div className="flex items-center gap-4 mb-6 bg-white rounded-lg shadow px-4 py-3">
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-700">From</label>
-          <input
+          <Input
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-700">To</label>
-          <input
+          <Input
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <span className="text-xs text-gray-400 ml-auto">

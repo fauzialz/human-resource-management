@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { getUser } from '../lib/session';
 import { useToast } from '@human-resource-management/ui-components';
-import { PasswordInput } from '@human-resource-management/ui-components';
+import { InputPassword } from '@human-resource-management/ui-components';
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ export default function ChangePasswordPage() {
           >
             Current Password
           </label>
-          <PasswordInput
+          <InputPassword
             id="current-password"
             required
             value={currentPassword}
@@ -104,7 +104,7 @@ export default function ChangePasswordPage() {
           >
             New Password
           </label>
-          <PasswordInput
+          <InputPassword
             id="new-password"
             required
             value={newPassword}
@@ -119,12 +119,11 @@ export default function ChangePasswordPage() {
           >
             Confirm New Password
           </label>
-          <PasswordInput
+          <InputPassword
             id="confirm-password"
             required
             value={confirmPassword}
             onChange={setConfirmPassword}
-            hasError={!!validationError && newPassword !== confirmPassword}
           />
         </div>
 
