@@ -5,6 +5,7 @@ import { resolve } from 'path';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
+  envDir: '../../',
   cacheDir: '../../node_modules/.vite/apps/employee-app',
   resolve: {
     alias: {

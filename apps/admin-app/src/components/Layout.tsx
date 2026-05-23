@@ -72,7 +72,7 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className="w-56 bg-indigo-800 flex flex-col shrink-0">
         <div className="px-4 py-5 border-b border-indigo-700">
-          <span className="text-white font-bold text-lg">HR Admin</span>
+          <span className="text-white font-bold text-lg">Admin App</span>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           <NavLink to="/employees" className={navClass}>

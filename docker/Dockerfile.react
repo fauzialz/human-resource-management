@@ -2,6 +2,8 @@
 FROM node:20-alpine AS builder
 
 ARG APP_NAME
+# Declare Vite build-time env vars so they are visible during `nx build`
+ARG VITE_BASE_API_URL
 WORKDIR /app
 
 # Copy dependency manifests first for layer caching

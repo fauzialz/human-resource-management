@@ -2,10 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { setSession } from '../lib/session';
-import {
-  Input,
-  InputPassword,
-} from '@human-resource-management/ui-components';
+import { Input, InputPassword } from '@human-resource-management/ui-components';
 
 interface LoginResponse {
   access_token: string;
@@ -52,7 +49,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white rounded-lg shadow p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Admin Login</h1>
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
+          <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
+        </div>
         {error && (
           <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
             {error}
@@ -93,7 +93,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-8 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium py-2 rounded text-sm transition-colors"
+            className="w-full mt-8 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
           >
             {loading ? 'Signing in…' : 'Sign In'}
           </button>

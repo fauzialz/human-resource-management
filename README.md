@@ -1,109 +1,163 @@
-# HumanResourceManagement
+# Human Resource Management
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+An Nx monorepo containing multiple NestJS backend services, two React frontends, and shared libraries.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## Architecture
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/js?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+| Name                 | Type                                         | Default Port |
+| -------------------- | -------------------------------------------- | ------------ |
+| `gateway`            | NestJS — API gateway, auth, request proxying | 3000         |
+| `employee-service`   | NestJS — employee management, auth           | 3001         |
+| `attendance-service` | NestJS — attendance records                  | 3002         |
+| `log-consumer`       | NestJS — audit log consumer (no HTTP)        | —            |
+| `employee-app`       | React/Vite — employee self-service portal    | 4000         |
+| `admin-app`          | React/Vite — admin dashboard                 | 4001         |
 
-## Generate a library
+All client traffic goes through the **gateway** on port 3000. The React apps communicate exclusively with the gateway.
 
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
+---
+
+## Option 1 — Full Stack via Docker Compose
+
+The fastest way to run the entire stack locally.
+
+**Prerequisites:** Docker and Docker Compose.
+
+### 1. Configure environment variables
+
+```bash
+cp .env.example .env
 ```
 
-## Run tasks
+Edit `.env` and fill in at minimum:
 
-To build the library use:
+- `POSTGRES_PASSWORD` — any password
+- `JWT_SECRET` — any long random string
 
-```sh
-npx nx build pkg1
+### 2. Start everything
+
+```bash
+docker compose up --build
 ```
 
-To run any task with Nx use:
+On first run, `docker/init-db.sql` creates the required databases automatically.
 
-```sh
-npx nx <target> <project-name>
+| URL                       | Description  |
+| ------------------------- | ------------ |
+| http://localhost:4000     | Employee App |
+| http://localhost:4001     | Admin App    |
+| http://localhost:3000/api | Gateway API  |
+
+> Changing `VITE_BASE_API_URL` requires a rebuild (`docker compose up --build`) because Vite bakes it into the JS bundle at build time.
+
+---
+
+## Option 2 — Local Development
+
+Use this when actively developing — services watch for file changes and restart automatically.
+
+**Prerequisites:** Node.js 20, PostgreSQL 16, Redis 7.
+
+### 1. Install dependencies
+
+```bash
+npm install
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### 2. Start infrastructure
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+The easiest way is to run only the infrastructure containers from docker-compose:
 
-## Versioning and releasing
-
-To version and release the library use
-
-```
-npx nx release
+```bash
+docker compose up postgres redis
 ```
 
-Pass `--dry-run` to see what would happen without actually releasing the library.
+Or use your own local Postgres and Redis instances.
 
-[Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### 3. Configure environment variables
 
-## Keep TypeScript project references up to date
+All services and both React apps read from the single root `.env`. Copy the example and fill it in:
 
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
-
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
-
-```sh
-npx nx sync
+```bash
+cp .env.example .env
 ```
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+Fill in at minimum `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `JWT_SECRET`. When running locally, keep the service URLs pointing to `localhost`:
 
-```sh
-npx nx sync:check
+```
+EMPLOYEE_SERVICE_URL=http://localhost:3001
+ATTENDANCE_SERVICE_URL=http://localhost:3002
 ```
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+> The per-service `.env.example` files in each app folder document which variables each service needs — useful as a reference for individual service deployments (e.g. AWS Parameter Store), but not required for local development.
 
-## Set up CI!
+### 4. Create databases
 
-### Step 1
+If you are not using the docker-compose Postgres (which auto-runs `docker/init-db.sql`), create the databases manually:
 
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
+```sql
+CREATE DATABASE employee_db;
+CREATE DATABASE attendance_db;
+CREATE DATABASE audit_db;
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+### 5. Run migrations
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
+```bash
+npx nx run employee-service:migration:run
+npx nx run attendance-service:migration:run
+npx nx run log-consumer:migration:run
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+> **Default admin account** — seeded automatically by the employee-service migration.
+> Log in to the Admin App with:
+>
+> - Email: `admin@company.com`
+> - Password: `Admin1234!`
+>
+> Change this password immediately after first login.
 
-## Install Nx Console
+### 6. Start backend services
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+Run each in a separate terminal:
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+npx nx serve gateway
+npx nx serve employee-service
+npx nx serve attendance-service
+npx nx serve log-consumer
+```
 
-## Useful links
+### 7. Start frontend apps
 
-Learn more:
+```bash
+npx nx serve employee-app   # http://localhost:4000
+npx nx serve admin-app      # http://localhost:4001
+```
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/js?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+---
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Common Commands
+
+```bash
+# Serve a specific app in development mode
+npx nx serve <app-name>
+
+# Build for production
+npx nx build <app-name>
+
+# Run migrations
+npx nx run employee-service:migration:run
+npx nx run attendance-service:migration:run
+npx nx run log-consumer:migration:run
+
+# Generate a new migration
+npx nx run employee-service:migration:generate --args="--name=<MigrationName>"
+npx nx run attendance-service:migration:generate --args="--name=<MigrationName>"
+npx nx run log-consumer:migration:generate --args="--name=<MigrationName>"
+
+# Revert the last migration
+npx nx run employee-service:migration:revert
+npx nx run attendance-service:migration:revert
+npx nx run log-consumer:migration:revert
+```
