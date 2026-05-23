@@ -40,7 +40,7 @@ Edit `.env` and fill in at minimum:
 docker compose up --build
 ```
 
-On first run, `docker/init-db.sql` creates the required databases automatically.
+On first run, `docker/init-db.sh` creates the required databases automatically using the names defined by `POSTGRES_EMPLOYEE_DB`, `POSTGRES_ATTENDANCE_DB`, and `POSTGRES_AUDIT_DB` in your `.env`.
 
 | URL                       | Description  |
 | ------------------------- | ------------ |
@@ -93,12 +93,12 @@ ATTENDANCE_SERVICE_URL=http://localhost:3002
 
 ### 4. Create databases
 
-If you are not using the docker-compose Postgres (which auto-runs `docker/init-db.sql`), create the databases manually:
+If you are not using the docker-compose Postgres (which auto-runs `docker/init-db.sh`), create the databases manually using the same names set in your `.env`:
 
 ```sql
-CREATE DATABASE employee_db;
-CREATE DATABASE attendance_db;
-CREATE DATABASE audit_db;
+CREATE DATABASE employee_db;   -- POSTGRES_EMPLOYEE_DB
+CREATE DATABASE attendance_db; -- POSTGRES_ATTENDANCE_DB
+CREATE DATABASE audit_db;      -- POSTGRES_AUDIT_DB
 ```
 
 ### 5. Run migrations
