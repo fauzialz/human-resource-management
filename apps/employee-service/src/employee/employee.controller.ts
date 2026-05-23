@@ -4,6 +4,7 @@ import {
   Post,
   Patch,
   Param,
+  Query,
   Body,
   UploadedFile,
   UseInterceptors,
@@ -40,8 +41,9 @@ export class EmployeeController {
 
   @Get()
   @Roles(UserRole.ADMIN)
-  findAll() {
-    return this.employeeService.findAll();
+  findAll(@Query('ids') ids?: string) {
+    const idList = ids ? ids.split(',').filter(Boolean) : undefined;
+    return this.employeeService.findAll(idList);
   }
 
   @Post()
@@ -82,7 +84,6 @@ export class EmployeeController {
       user.role === UserRole.EMPLOYEE
         ? {
             phone: dto.phone,
-            password: dto.password,
             photoUrl,
             removePhoto: dto.removePhoto,
           }

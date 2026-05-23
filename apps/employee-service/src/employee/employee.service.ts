@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, In, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
@@ -9,6 +9,7 @@ import { RedisService } from '../redis/redis.service';
 import type {
   ChangeFieldEvent,
   CreateEmployeeDto,
+  Employee,
   UpdateEmployeeDto,
 } from '@human-resource-management/shared-types';
 
@@ -32,20 +33,39 @@ export class EmployeeService {
     private readonly redis: RedisService,
   ) {}
 
-  findAll(): Promise<EmployeeEntity[]> {
-    return this.repo.find();
+  private toEmployee(entity: EmployeeEntity): Employee {
+    return {
+      id: entity.id,
+      name: entity.name,
+      email: entity.email,
+      phone: entity.phone,
+      photoUrl: entity.photoUrl ?? '',
+      position: entity.position,
+      role: entity.role,
+      createdAt: entity.createdAt,
+    };
   }
 
-  async findOne(id: string): Promise<EmployeeEntity> {
+  private async findOneEntity(id: string): Promise<EmployeeEntity> {
     const emp = await this.repo.findOne({ where: { id } });
     if (!emp) throw new NotFoundException(`Employee ${id} not found`);
     return emp;
   }
 
-  async create(
-    dto: CreateEmployeeDto,
-    createdById: string,
-  ): Promise<EmployeeEntity> {
+  async findAll(ids?: string[]): Promise<Employee[]> {
+    let options: FindManyOptions<EmployeeEntity> | undefined = undefined;
+    if (ids && ids.length > 0) {
+      options = { where: { id: In(ids) } };
+    }
+    const entities = await this.repo.find(options);
+    return entities.map((e) => this.toEmployee(e));
+  }
+
+  async findOne(id: string): Promise<Employee> {
+    return this.toEmployee(await this.findOneEntity(id));
+  }
+
+  async create(dto: CreateEmployeeDto, createdById: string): Promise<Employee> {
     const emp = this.repo.create({
       name: dto.name,
       email: dto.email,
@@ -56,28 +76,35 @@ export class EmployeeService {
       role: dto.role,
       createdById: createdById,
     });
-    return this.repo.save(emp);
+    return this.toEmployee(await this.repo.save(emp));
   }
 
   async update(
     id: string,
     dto: UpdateEmployeeDto,
     updatedById: string,
-  ): Promise<EmployeeEntity> {
-    const emp = await this.findOne(id);
+  ): Promise<Employee> {
+    const emp = await this.findOneEntity(id);
     const oldData = { ...emp };
     const { password: _pass, removePhoto, ...rest } = dto;
 
     if (dto.password) {
       emp.passwordHash = await bcrypt.hash(dto.password, 10);
     }
-    Object.assign(emp, rest);
+    const defined = Object.fromEntries(
+      Object.entries(rest).filter(([, v]) => v !== undefined),
+    );
+    Object.assign(emp, defined);
 
-    if (removePhoto === 'true') {
+    // We need removePhoto flag because if photoUrl is set to null, it can mean either "no change"
+    // or "remove photo". The flag disambiguates this. If removePhoto is true, we remove the photo
+    // regardless of photoUrl value. If removePhoto is false, we only update photo if photoUrl is
+    // provided.
+    if (removePhoto === 'true' || dto.photoUrl != undefined) {
       if (oldData.photoUrl) {
         await unlink(join(process.cwd(), oldData.photoUrl)).catch(() => {});
       }
-      emp.photoUrl = null;
+      emp.photoUrl = dto.photoUrl ?? null;
     }
     const saved = await this.repo.save(emp);
 
@@ -123,7 +150,7 @@ export class EmployeeService {
       });
     }
 
-    return saved;
+    return this.toEmployee(saved);
   }
 
   async updatePassword(
@@ -131,7 +158,7 @@ export class EmployeeService {
     newPassword: string,
     updatedById: string,
   ): Promise<void> {
-    const emp = await this.findOne(id);
+    const emp = await this.findOneEntity(id);
     emp.passwordHash = await bcrypt.hash(newPassword, 10);
     await this.repo.save(emp);
     await this.redis.publishProfileChange({

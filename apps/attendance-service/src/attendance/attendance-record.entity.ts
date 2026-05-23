@@ -13,8 +13,8 @@ export class AttendanceRecord {
   @Column({ name: 'employee_id', type: 'uuid' })
   employeeId!: string;
 
-  @Column({ name: 'clock_in', type: 'timestamp', nullable: true })
-  clockIn!: Date | null;
+  @Column({ name: 'clock_in', type: 'timestamp' })
+  clockIn!: Date;
 
   @Column({ name: 'clock_out', type: 'timestamp', nullable: true })
   clockOut!: Date | null;

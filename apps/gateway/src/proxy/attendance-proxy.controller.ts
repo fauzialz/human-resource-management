@@ -31,6 +31,16 @@ export class AttendanceProxyController {
     );
   }
 
+  @Get('today')
+  async today(@Req() req: AuthRequest, @Res() res: Response): Promise<void> {
+    await this.proxy.forward(
+      req,
+      res,
+      'ATTENDANCE_SERVICE_URL',
+      '/api/attendance/today',
+    );
+  }
+
   @Get('summary')
   async summary(@Req() req: AuthRequest, @Res() res: Response): Promise<void> {
     await this.proxy.forward(

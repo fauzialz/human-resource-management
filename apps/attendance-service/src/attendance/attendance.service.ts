@@ -1,7 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { AttendanceRecord } from './attendance-record.entity';
+import {
+  AttendanceAllResponse,
+  Employee,
+  UserRole,
+} from '@human-resource-management/shared-types';
+import { RequestUser } from '@human-resource-management/common';
 
 function todayDateStr(): string {
   return new Date().toISOString().split('T')[0];
@@ -29,6 +36,7 @@ export class AttendanceService {
   constructor(
     @InjectRepository(AttendanceRecord)
     private readonly repo: Repository<AttendanceRecord>,
+    private readonly config: ConfigService,
   ) {}
 
   private findTodayRecord(
@@ -68,6 +76,10 @@ export class AttendanceService {
     return this.repo.save(record);
   }
 
+  today(employeeId: string): Promise<AttendanceRecord | null> {
+    return this.findTodayRecord(employeeId);
+  }
+
   summary(
     employeeId: string,
     from: string = startOfMonthDateStr(),
@@ -79,13 +91,56 @@ export class AttendanceService {
     });
   }
 
-  all(
+  async all(
     from: string = startOfMonthDateStr(),
     to: string = todayDateStr(),
-  ): Promise<AttendanceRecord[]> {
-    return this.repo.find({
+    user: RequestUser,
+  ): Promise<AttendanceAllResponse[]> {
+    const records = await this.repo.find({
       where: { createdAt: Between(startOfDay(from), endOfDay(to)) },
       order: { createdAt: 'DESC', employeeId: 'ASC' },
+    });
+
+    const employeeIds = [...new Set(records.map((r) => r.employeeId))];
+    const employeeMap = new Map<string, Employee>();
+
+    // Fetch employee details from employee service
+    if (employeeIds.length > 0) {
+      const baseUrl = this.config.get(
+        'EMPLOYEE_SERVICE_URL',
+        'http://localhost:3001',
+      );
+      const res = await fetch(
+        `${baseUrl}/api/employees?ids=${employeeIds.join(',')}`,
+        {
+          headers: {
+            'x-user-id': user.id,
+            'x-user-role': user.role,
+          },
+        },
+      );
+      if (res.ok) {
+        const employees = (await res.json()) as Employee[];
+        for (const emp of employees) {
+          employeeMap.set(emp.id, emp);
+        }
+      }
+    }
+
+    return records.map((record) => {
+      const emp = employeeMap.get(record.employeeId);
+      return {
+        id: record.id,
+        clockIn: record.clockIn,
+        clockOut: record.clockOut,
+        createdAt: record.createdAt,
+        employee: {
+          id: record.employeeId,
+          name: emp?.name ?? 'Unknown',
+          position: emp?.position ?? '',
+          role: emp?.role ?? UserRole.EMPLOYEE,
+        },
+      };
     });
   }
 }

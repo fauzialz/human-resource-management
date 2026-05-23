@@ -9,6 +9,7 @@ import { GatewayRolesGuard } from '../guards/roles.guard';
 import { AttendanceProxyController } from '../proxy/attendance-proxy.controller';
 import { AuthProxyController } from '../proxy/auth-proxy.controller';
 import { EmployeeProxyController } from '../proxy/employee-proxy.controller';
+import { UploadsProxyController } from '../proxy/uploads-proxy.controller';
 import { ProxyService } from '../proxy/proxy.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -29,6 +30,7 @@ import { AppService } from './app.service';
     AuthProxyController,
     EmployeeProxyController,
     AttendanceProxyController,
+    UploadsProxyController,
     AdminEventsController,
   ],
   providers: [

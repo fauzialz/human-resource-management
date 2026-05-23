@@ -46,6 +46,28 @@ export class ProxyService {
     }
   }
 
+  async forwardBinary(
+    res: Response,
+    serviceEnvKey: string,
+    path: string,
+  ): Promise<void> {
+    const baseUrl = this.config.get<string>(serviceEnvKey);
+    try {
+      const upstream = await axios.get(`${baseUrl}${path}`, {
+        responseType: 'stream',
+        validateStatus: () => true,
+      });
+      res.status(upstream.status);
+      const contentType = upstream.headers['content-type'] as
+        | string
+        | undefined;
+      if (contentType) res.setHeader('content-type', contentType);
+      upstream.data.pipe(res);
+    } catch {
+      res.status(502).end();
+    }
+  }
+
   private async forwardStream(
     req: GatewayRequest,
     res: Response,
