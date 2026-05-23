@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { setSession } from '../lib/session';
-import { PasswordInput } from '@human-resource-management/ui-components';
+import {
+  Input,
+  InputPassword,
+} from '@human-resource-management/ui-components';
 
 interface LoginResponse {
   access_token: string;
@@ -63,21 +66,14 @@ export default function LoginPage() {
             >
               Email
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              {...(fieldErrors.email && {
-                className:
-                  'w-full border border-red-500 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500',
-              })}
+              error={fieldErrors.email}
             />
-            {fieldErrors.email && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
-            )}
           </div>
           <div className="mt-4">
             <label
@@ -86,18 +82,13 @@ export default function LoginPage() {
             >
               Password
             </label>
-            <PasswordInput
+            <InputPassword
               id="password"
               required
               value={password}
               onChange={setPassword}
-              hasError={!!fieldErrors.password}
+              error={fieldErrors.password}
             />
-            {fieldErrors.password && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldErrors.password}
-              </p>
-            )}
           </div>
           <button
             type="submit"

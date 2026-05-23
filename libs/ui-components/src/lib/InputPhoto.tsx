@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 
-interface PhotoInputProps {
+interface InputPhotoProps {
   value: File | null;
   onChange: (file: File | null) => void;
   currentUrl?: string;
   onRemove?: () => void;
 }
 
-export function PhotoInput({
+export function InputPhoto({
   value,
   onChange,
   currentUrl,
   onRemove,
-}: PhotoInputProps) {
+}: InputPhotoProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 

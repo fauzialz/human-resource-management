@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useToast } from '../context/ToastContext';
-import { BASE_URL } from '../api/client';
+import { useToast } from '@human-resource-management/ui-components';
+import { BASE_API_URL } from '../api/client';
 import { getToken } from '../lib/session';
 import { ProfileChangeEvent } from '@human-resource-management/shared-types';
 
@@ -27,7 +27,7 @@ export default function Layout() {
       return;
     }
 
-    const url = `${BASE_URL}/admin/events?token=${encodeURIComponent(token)}`; // BASE_URL already includes /api
+    const url = `${BASE_API_URL}/admin/events?token=${encodeURIComponent(token)}`;
     const es = new EventSource(url);
     esRef.current = es;
 
@@ -39,6 +39,7 @@ export default function Layout() {
           .join(', ');
         addToast(
           `Employee ${event.employeeName} changed: ${fields || 'profile'}`,
+          'info',
         );
       } catch {
         // ignore malformed

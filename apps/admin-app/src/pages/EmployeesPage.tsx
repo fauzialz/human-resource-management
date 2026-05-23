@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, unwrap, EMPLOYEE_SERVICE_URL } from '../api/client';
-import { ApiError } from '../types/api';
-import { getUser } from '../lib/session';
-import { Employee, UserRole } from '@human-resource-management/shared-types';
+import { api, unwrap, getPhotoUrl } from '../api/client';
 import {
-  PasswordInput,
-  PhotoInput,
+  ApiError,
+  Employee,
+  UserRole,
+} from '@human-resource-management/shared-types';
+import {
+  Input,
+  InputPassword,
+  InputPhoto,
 } from '@human-resource-management/ui-components';
 
 interface EmployeeFormData {
@@ -179,10 +182,6 @@ export default function EmployeesPage() {
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
-  const existingPhotoUrl = editTarget?.photoUrl
-    ? `${EMPLOYEE_SERVICE_URL}/${editTarget.photoUrl}`
-    : undefined;
-
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -278,42 +277,45 @@ export default function EmployeesPage() {
             )}
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="flex justify-center mb-1">
-                <PhotoInput
+                <InputPhoto
                   value={photo}
-                  onChange={setPhoto}
-                  currentUrl={photoRemoved ? undefined : existingPhotoUrl}
+                  onChange={(f) => {
+                    setPhoto(f);
+                    if (f) setPhotoRemoved(false);
+                  }}
+                  currentUrl={
+                    photoRemoved ? undefined : getPhotoUrl(editTarget?.photoUrl)
+                  }
                   onRemove={() => setPhotoRemoved(true)}
                 />
               </div>
-              <Field label="Name" error={fieldErrors['name']}>
-                <input
+              <Field label="Name">
+                <Input
                   required
                   value={form.name}
                   onChange={(e) => handleField('name', e.target.value)}
-                  className={inputCls(!!fieldErrors['name'])}
+                  error={fieldErrors['name']}
                 />
               </Field>
-              <Field label="Email" error={fieldErrors['email']}>
-                <input
+              <Field label="Email">
+                <Input
                   type="email"
                   required
                   value={form.email}
                   onChange={(e) => handleField('email', e.target.value)}
-                  className={inputCls(!!fieldErrors['email'])}
+                  error={fieldErrors['email']}
                 />
               </Field>
               <Field
                 label={
                   editTarget ? 'Password (leave blank to keep)' : 'Password'
                 }
-                error={fieldErrors['password']}
               >
-                <PasswordInput
+                <InputPassword
                   required={!editTarget}
                   value={form.password}
                   onChange={handlePasswordChange}
-                  hasError={!!fieldErrors['password']}
-                  className={`${inputCls(!!fieldErrors['password'])} pr-9`}
+                  error={fieldErrors['password']}
                 />
               </Field>
               <Field
@@ -322,29 +324,27 @@ export default function EmployeesPage() {
                     ? 'Confirm Password (leave blank to keep)'
                     : 'Confirm Password'
                 }
-                error={fieldErrors['confirmPassword']}
               >
-                <PasswordInput
+                <InputPassword
                   required={!editTarget}
                   value={confirmPassword}
                   onChange={handleConfirmPasswordChange}
-                  hasError={!!fieldErrors['confirmPassword']}
-                  className={`${inputCls(!!fieldErrors['confirmPassword'])} pr-9`}
+                  error={fieldErrors['confirmPassword']}
                 />
               </Field>
-              <Field label="Phone" error={fieldErrors['phone']}>
-                <input
+              <Field label="Phone">
+                <Input
                   value={form.phone}
                   onChange={(e) => handleField('phone', e.target.value)}
-                  className={inputCls(!!fieldErrors['phone'])}
+                  error={fieldErrors['phone']}
                 />
               </Field>
-              <Field label="Position" error={fieldErrors['position']}>
-                <input
+              <Field label="Position">
+                <Input
                   required
                   value={form.position}
                   onChange={(e) => handleField('position', e.target.value)}
-                  className={inputCls(!!fieldErrors['position'])}
+                  error={fieldErrors['position']}
                 />
               </Field>
               <Field label="Role" error={fieldErrors['role']}>

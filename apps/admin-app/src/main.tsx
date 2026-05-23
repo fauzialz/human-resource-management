@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './styles.css';
 import App from './app/app';
-import { ToastProvider } from './context/ToastContext';
+import { ToastProvider } from '@human-resource-management/ui-components';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },

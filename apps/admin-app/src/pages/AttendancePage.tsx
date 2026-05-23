@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, unwrap } from '../api/client';
-import { AttendanceRecord } from '@human-resource-management/shared-types';
+import { AttendanceAllResponse } from '@human-resource-management/shared-types';
+import { Input } from '@human-resource-management/ui-components';
 
 function startOfMonth(): string {
   const d = new Date();
@@ -40,6 +41,7 @@ export default function AttendancePage() {
     isError,
   } = useQuery({
     queryKey: ['attendance-all', from, to],
+    refetchOnMount: true,
     queryFn: async () => {
       const params = new URLSearchParams();
       if (from) params.set('from', new Date(from).toISOString());
@@ -48,7 +50,7 @@ export default function AttendancePage() {
         end.setHours(23, 59, 59, 999);
         params.set('to', end.toISOString());
       }
-      const res = await api.get<AttendanceRecord[]>(
+      const res = await api.get<AttendanceAllResponse[]>(
         `/attendance/all?${params}`,
       );
       return unwrap(res);
@@ -65,23 +67,21 @@ export default function AttendancePage() {
       <div className="flex items-center gap-4 mb-6 bg-white rounded-lg shadow px-4 py-3">
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-700">From</label>
-          <input
+          <Input
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-700">To</label>
-          <input
+          <Input
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-gray-400  ml-auto">
           {records.length} record{records.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -95,7 +95,7 @@ export default function AttendancePage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Employee ID', 'Date', 'Clock In', 'Clock Out'].map((h) => (
+                {['Name', 'Date', 'Clock In', 'Clock Out'].map((h) => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -108,8 +108,8 @@ export default function AttendancePage() {
             <tbody className="divide-y divide-gray-100">
               {records.map((r) => (
                 <tr key={r.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-mono text-gray-600">
-                    {r.employeeId.slice(0, 8)}…
+                  <td className="px-4 py-3 text-sm text-gray-800">
+                    {r.employee.name}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-800">
                     {formatDate(r.clockIn)}

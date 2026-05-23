@@ -45,7 +45,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       setToasts((prev) => [...prev, { id, message, leaving: false, type }]);
       timersRef.current.set(
         id,
-        setTimeout(() => dismiss(id), 4000),
+        setTimeout(() => dismiss(id), 5000),
       );
     },
     [dismiss],
