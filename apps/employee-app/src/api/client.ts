@@ -3,17 +3,17 @@ import type { ApiResponse } from '@human-resource-management/shared-types';
 import { ApiError } from '@human-resource-management/shared-types';
 import { clearSession, getToken } from '../lib/session';
 
-export const BASE_URL = 'http://localhost:3000/api';
-export const MEDIA_BASE_URL = 'http://localhost:3001';
+export const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+export const MEDIA_SERVICE_URL = BASE_API_URL.replace(/\/api$/, '');
 
-export function getPhotoUrl(url?: string | null): string | undefined {
+export function getPhotoUrl(url?: string): string | undefined {
   if (!url) return undefined;
   if (url.startsWith('http')) return url;
-  return `${MEDIA_BASE_URL}/${url}`;
+  return `${MEDIA_SERVICE_URL}/${url}`;
 }
 
 export const axiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: BASE_API_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 

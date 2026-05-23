@@ -6,6 +6,7 @@ export default function LogoutPage() {
 
   useEffect(() => {
     clearSession();
+
     redirect.current = setTimeout(() => {
       window.location.href = '/login';
     }, 500);
@@ -15,9 +16,11 @@ export default function LogoutPage() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
-      <h1 className="text-xl font-semibold text-gray-700 mb-2">Logging out…</h1>
-      <p className="text-sm text-gray-500">You will be redirected to the login page.</p>
+    <div className="flex flex-col items-center justify-center h-screen">
+      <h1 className="text-2xl font-bold mb-4">Logging out...</h1>
+      <p className="text-gray-600">
+        You will be redirected to the login page shortly.
+      </p>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { api, axiosInstance, unwrap, getPhotoUrl } from '../api/client';
 import { getUser, updateUser } from '../lib/session';
 import {
   useToast,
-  PhotoInput,
+  InputPhoto,
   Input,
 } from '@human-resource-management/ui-components';
 import type { Employee } from '@human-resource-management/shared-types';
@@ -87,10 +87,6 @@ export default function ProfileEditPage() {
     );
   }
 
-  const currentPhotoUrl = removePhoto
-    ? undefined
-    : getPhotoUrl(employee.photoUrl);
-
   return (
     <div className="p-4 sm:p-6 max-w-lg mx-auto">
       <div className="flex items-center gap-3 mb-6">
@@ -127,13 +123,15 @@ export default function ProfileEditPage() {
           <label className="text-sm font-medium text-gray-700 self-start">
             Photo
           </label>
-          <PhotoInput
+          <InputPhoto
             value={photo}
             onChange={(f) => {
               setPhoto(f);
-              if (!f) setRemovePhoto(false);
+              if (f) setRemovePhoto(false);
             }}
-            currentUrl={currentPhotoUrl}
+            currentUrl={
+              removePhoto ? undefined : getPhotoUrl(employee.photoUrl)
+            }
             onRemove={() => setRemovePhoto(true)}
           />
         </div>

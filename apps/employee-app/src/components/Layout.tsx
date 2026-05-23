@@ -80,7 +80,6 @@ function LogoutIcon() {
 const NAV_ITEMS: NavItem[] = [
   { to: '/attendance', label: 'Attendance', icon: <CalendarIcon /> },
   { to: '/summary', label: 'Summary', icon: <ChartIcon /> },
-  // { to: '/profile', label: 'Profile', icon: <UserIcon /> },
 ];
 
 const MOBILE_NAV_ITEMS: NavItem[] = [
@@ -94,8 +93,7 @@ export default function Layout() {
   const user = getUser();
 
   function handleLogout() {
-    clearSession();
-    navigate('/login', { replace: true });
+    navigate('/logout');
   }
 
   const sideNavClass = ({ isActive }: { isActive: boolean }) =>

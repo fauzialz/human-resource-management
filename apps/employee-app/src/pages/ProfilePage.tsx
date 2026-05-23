@@ -38,8 +38,6 @@ export default function ProfilePage() {
     );
   }
 
-  const photoUrl = getPhotoUrl(employee.photoUrl);
-
   return (
     <div className="p-4 sm:p-6 max-w-lg mx-auto">
       <h1 className="text-xl font-bold text-gray-900 mb-6">Profile</h1>
@@ -48,7 +46,7 @@ export default function ProfilePage() {
         {/* Header with photo */}
         <div className="bg-blue-600 px-6 pt-8 pb-14 flex justify-center">
           <ProfileAvatar
-            src={photoUrl}
+            src={getPhotoUrl(employee.photoUrl)}
             alt={employee.name}
             name={employee.name}
           />
